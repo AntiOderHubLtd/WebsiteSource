@@ -1,5 +1,5 @@
 --[[
        New loadstring!
-       Website: https://antioderhub.fun
+       Website: https://antioderhub.lol
 ]]
-loadstring(game:HttpGet("https://antioderhub.fun"))()
+loadstring(game:HttpGet("https://antioderhub.lol"))()

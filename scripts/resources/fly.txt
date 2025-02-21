@@ -1,1 +1,1 @@
-loadstring(game:HttpGet("https://antioderhub.fun/AntiOderFly.lua"))()
+loadstring(game:HttpGet("https://antioderhub.lol/AntiOderFly.lua"))()

